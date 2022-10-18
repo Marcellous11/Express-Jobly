@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
+const { compare, compareSync } = require('bcrypt');
 /** Convenience middleware to handle common auth cases in routes. */
 
-const jwt = require("jsonwebtoken");
-const { SECRET_KEY } = require("../config");
-const { UnauthorizedError } = require("../expressError");
-
+const jwt = require('jsonwebtoken');
+const { SECRET_KEY } = require('../config');
+const { UnauthorizedError } = require('../expressError');
 
 /** Middleware: Authenticate user.
  *
@@ -16,16 +16,16 @@ const { UnauthorizedError } = require("../expressError");
  */
 
 function authenticateJWT(req, res, next) {
-  try {
-    const authHeader = req.headers && req.headers.authorization;
-    if (authHeader) {
-      const token = authHeader.replace(/^[Bb]earer /, "").trim();
-      res.locals.user = jwt.verify(token, SECRET_KEY);
-    }
-    return next();
-  } catch (err) {
-    return next();
-  }
+	try {
+		const authHeader = req.headers && req.headers.authorization;
+		if (authHeader) {
+			const token = authHeader.replace(/^[Bb]earer /, '').trim();
+			res.locals.user = jwt.verify(token, SECRET_KEY);
+		}
+		return next();
+	} catch (err) {
+		return next();
+	}
 }
 
 /** Middleware to use when they must be logged in.
@@ -34,16 +34,34 @@ function authenticateJWT(req, res, next) {
  */
 
 function ensureLoggedIn(req, res, next) {
-  try {
-    if (!res.locals.user) throw new UnauthorizedError();
-    return next();
-  } catch (err) {
-    return next(err);
-  }
+	try {
+		if (!res.locals.user) throw new UnauthorizedError();
+		return next();
+	} catch (err) {
+		return next(err);
+	}
 }
 
+function ensureAdmin(req, res, next) {
+	try {
+		const token = req.headers.token;
+
+		if (token === undefined) {
+			throw new UnauthorizedError();
+		}
+
+		res.locals.user = jwt.verify(token, SECRET_KEY);
+		if (!res.locals.user.isAdmin) {
+			throw new UnauthorizedError();
+		}
+		return next();
+	} catch (err) {
+		return next(err);
+	}
+}
 
 module.exports = {
-  authenticateJWT,
-  ensureLoggedIn,
+	authenticateJWT,
+	ensureLoggedIn,
+	ensureAdmin
 };

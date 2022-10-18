@@ -60,7 +60,7 @@ class Company {
 		const result = await db.query(
 			`SELECT handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"
        FROM companies
-       WHERE num_employees < $1 
+       WHERE num_employees <= $1 
        ORDER BY num_employees DESC
       `,
 			[ max ]
@@ -72,7 +72,7 @@ class Company {
 		const result = await db.query(
 			`SELECT handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"
        FROM companies
-       WHERE num_employees > $1
+       WHERE num_employees >= $1
        ORDER BY num_employees 
       `,
 			[ min ]
@@ -81,13 +81,31 @@ class Company {
 	}
 
 	static async filter(min, max) {
+		if (max < min) {
+			throw new BadRequestError('Min employees cannot be greater than max');
+		}
 		const result = await db.query(
 			`SELECT handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"
        FROM companies
-       WHERE num_employees > $1 AND num_employees < $2
+       WHERE num_employees >= $1 AND num_employees <= $2
        ORDER BY num_employees 
       `,
 			[ min, max ]
+		);
+		return result.rows;
+	}
+
+	static async name(n) {
+		if (typeof n === 'number') {
+			throw new BadRequestError('No need for numbers');
+		}
+		const result = await db.query(
+			`SELECT handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"
+       FROM companies
+       WHERE handle LIKE LOWER($1)
+       ORDER BY num_employees 
+      `,
+			[ '%' + n + '%' ]
 		);
 		return result.rows;
 	}

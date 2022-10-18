@@ -53,7 +53,7 @@ router.get('/', async function(req, res, next) {
 	const q = req.query;
 	// arrive as strings from querystring, but we want as ints
 	console.log(q);
-	console.log(q.maxEmployees);
+
 	try {
 		if (Object.keys(q).length > 1) {
 			const companies = await Company.filter(q.minEmployees, q.maxEmployees);
@@ -67,7 +67,11 @@ router.get('/', async function(req, res, next) {
 			const companies = await Company.getmin(q.minEmployees);
 			return res.json({ companies });
 		}
-		if (q.name) {
+
+		if (q.nameLike) {
+			const companies = await Company.name(q.nameLike);
+
+			return res.json({ companies });
 		}
 
 		const companies = await Company.findAll();
